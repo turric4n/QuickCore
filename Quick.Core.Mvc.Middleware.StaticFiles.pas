@@ -47,25 +47,45 @@ uses
 type
   TStaticFilesMiddleware = class(TRequestDelegate)
   private
+    fValidExtensions : TStringList;
     function CanHandleExtension(const aFilename : string) : Boolean;
   public
     destructor Destroy; override;
+    constructor Create;
     procedure Invoke(aContext : THttpContextBase); override;
+    procedure AddValidExtension(const aExtension: string);
   end;
 
 implementation
 
 { TStaticFilesMiddleware }
 
+procedure TStaticFilesMiddleware.AddValidExtension(const aExtension: string);
+begin
+  fValidExtensions.Add(aExtension);
+end;
+
 function TStaticFilesMiddleware.CanHandleExtension(const aFilename: string): Boolean;
 begin
-  //check extensionless
-  Result := not ExtractFileExt(aFilename).IsEmpty;
+  //check extensionless and valid extensions
+
+  var currentExtension := ExtractFileExt(aFilename);
+
+  var validExtension := not currentExtension.IsEmpty;
+
+  if not fValidExtensions.IsEmpty then validExtension := validExtension and fValidExtensions.Contains(currentExtension);
+
+  Result := validExtension;
+end;
+
+constructor TStaticFilesMiddleware.Create;
+begin
+  fValidExtensions := TStringList.Create;
 end;
 
 destructor TStaticFilesMiddleware.Destroy;
 begin
-
+  fValidExtensions.Free;
   inherited;
 end;
 
@@ -99,5 +119,7 @@ begin
   end
   else Next(aContext);
 end;
+
+initialization
 
 end.

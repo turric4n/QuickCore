@@ -125,6 +125,8 @@ type
     function UseMiddleware(aCustomMiddleware: TRequestDelegate): TMVCServer; overload;
     function Use(aDelegateFunction : TRequestDelegateFunc) : TMVCServer;
     function UseStaticFiles : TMVCServer;
+    function UseStaticFilesValidExtension(const aExtension: string): TMVCServer;
+    function UseStaticFilesValidExtensions(const aExtensions: string): TMVCServer;
     function UseRouting : TMVCServer;
     function UseAuthentication : TMVCServer;
     function UseAuthorization : TMVCServer;
@@ -483,6 +485,33 @@ function TMVCServer.UseStaticFiles: TMVCServer;
 begin
   Result := Self;
   fMiddlewares.Add(TStaticFilesMiddleware.Create(nil));
+end;
+
+function TMVCServer.UseStaticFilesValidExtension(const aExtension: string): TMVCServer;
+begin
+  Result := Self;
+  for var middleware in fMiddlewares do
+  begin
+    if middleware is TStaticFilesMiddleware then
+    begin
+      TStaticFilesMiddleware(middleware).AddValidExtension(aExtension);
+    end;
+  end;
+end;
+
+function TMVCServer.UseStaticFilesValidExtensions(const aExtensions: string): TMVCServer;
+begin
+  Result := Self;
+  for var middleware in fMiddlewares do
+  begin
+    if middleware is TStaticFilesMiddleware then
+    begin
+      for var extension in aExtensions.Split([',',';',':']) do
+      begin
+        TStaticFilesMiddleware(middleware).AddValidExtension(extension);
+      end;
+    end;
+  end;
 end;
 
 function TMVCServer.UseWebRoot(const aPath: string): TMVCServer;
